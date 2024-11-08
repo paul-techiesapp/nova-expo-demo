@@ -40,6 +40,7 @@ export default function RootLayout() {
             options={{ headerShown: false, title: "Home" }}
           />
           <Stack.Screen name="add" options={{ title: "Add Task" }} />
+          <Stack.Screen name="edit" options={{ title: "Edit Task" }} />
           <Stack.Screen name="+not-found" />
         </Stack>
       </ThemeProvider>

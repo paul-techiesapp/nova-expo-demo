@@ -1,13 +1,13 @@
 import _ from "lodash";
 import Checkbox from "expo-checkbox";
-import { View, Dimensions } from "react-native";
+import { View, Dimensions, Pressable } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Icon, List, Text } from "react-native-paper";
+import { Button, Divider, Icon, List, Menu, Text } from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
 import { db } from "../firebaseConfig";
 import { useEffect, useState } from "react";
-import { ref, onValue, update } from "firebase/database";
+import { ref, onValue, update, remove } from "firebase/database";
 import { Link } from "expo-router";
 
 interface Task {
@@ -41,7 +41,11 @@ export default function HomeScreen() {
     setTimeout(() => {
       update(taskRef, { completed: newValue });
     }, 500);
-    // update(taskRef, { completed: newValue });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    const taskRef = ref(db, `tasks/${taskId}`);
+    remove(taskRef);
   };
 
   return (
@@ -55,12 +59,12 @@ export default function HomeScreen() {
       </View>
       <View
         style={{
-          margin: 8,
+          padding: 10,
           height: Dimensions.get("screen").height * 0.4,
           width: Dimensions.get("screen").width,
         }}
       >
-        <Text variant="titleLarge">TODO</Text>
+        <Text variant="titleLarge">TODO ({taskList.length})</Text>
         <FlashList
           data={taskList}
           ListEmptyComponent={
@@ -73,7 +77,18 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <List.Item
               title={item.task}
-              onPress={() => handleCheckboxChange(item.id, !item.completed)}
+              right={() => (
+                <>
+                  {/* <Icon source="dots-vertical" size={25} /> */}
+                  <Link href={{ pathname: "/edit", params: { id: item.id } }}>
+                    <Icon source="pencil" size={25} />
+                  </Link>
+                  <View style={{ width: 10 }} />
+                  <Pressable onPress={() => handleDeleteTask(item.id)}>
+                    <Icon source="delete" size={25} color="red" />
+                  </Pressable>
+                </>
+              )}
               left={(props) => (
                 <Checkbox
                   style={{ margin: 5 }}
@@ -88,15 +103,16 @@ export default function HomeScreen() {
           estimatedItemSize={200}
         />
       </View>
+      <Divider style={{ marginTop: 10 }} />
       <View
         style={{
-          margin: 8,
+          padding: 10,
           marginTop: 20,
           height: Dimensions.get("screen").height * 0.4,
           width: Dimensions.get("screen").width,
         }}
       >
-        <Text variant="titleLarge">Done Tasks</Text>
+        <Text variant="titleLarge">Done Tasks ({doneTaskList.length})</Text>
         <FlashList
           data={doneTaskList}
           ListEmptyComponent={
@@ -107,10 +123,20 @@ export default function HomeScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <List.Item
-              title={item.task}
-              left={(props) => <Icon source="check" size={20} color="green" />}
-            />
+            <Link href={{ pathname: "/edit", params: { id: item.id } }}>
+              <List.Item
+                title={item.task}
+                left={(props) => (
+                  <Checkbox
+                    style={{ margin: 5 }}
+                    value={item.completed}
+                    onValueChange={(newValue) =>
+                      handleCheckboxChange(item.id, newValue)
+                    }
+                  />
+                )}
+              />
+            </Link>
           )}
           estimatedItemSize={200}
         />
@@ -118,3 +144,10 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
+const ListEditMenu = () => (
+  <View style={{ position: "absolute", right: 0 }}>
+    <Menu.Item leadingIcon="edit" onPress={() => {}} title="Edit" />
+    <Menu.Item leadingIcon="delete" onPress={() => {}} title="Delete" />
+  </View>
+);
