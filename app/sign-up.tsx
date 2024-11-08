@@ -1,5 +1,4 @@
-import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   View,
@@ -8,36 +7,38 @@ import {
   Keyboard,
 } from "react-native";
 import { TextInput, Button, Title, Text } from "react-native-paper";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { app } from "../firebaseConfig"; // Ensure you have a firebaseConfig file that initializes Firebase
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { app } from "../firebaseConfig"; // Adjust the import according to your firebase config file path
+import { router } from "expo-router";
 
-const LoginPage: React.FC = () => {
+const SignUpPage: React.FC = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm();
 
-  const [signInError, setSignInError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const onSubmit = async (data: any) => {
-    setLoading(true);
     const auth = getAuth(app);
-    setSignInError(null);
+    setSignUpError(null);
+    setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(
+      const userCredential = await createUserWithEmailAndPassword(
         auth,
         data.email,
         data.password
       );
-      console.log("User signed in:", userCredential.user);
-      alert("User signed in successfully!");
-      // Navigate to the next screen or handle successful login
+      console.log("User signed up:", userCredential.user);
+      alert("User signed up successfully!");
+      reset();
+      router.navigate("/");
     } catch (error: any) {
-      console.error("Error signing in:", error);
-      // Handle error (e.g., show a message to the user)
-      setSignInError(error.message);
+      console.error("Error signing up:", error);
+      setSignUpError(error.message);
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,7 @@ const LoginPage: React.FC = () => {
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           <View style={{ width: "80%" }}>
-            <Title>Login</Title>
+            <Title>Sign Up</Title>
             <Controller
               control={control}
               rules={{ required: true }}
@@ -90,24 +91,10 @@ const LoginPage: React.FC = () => {
               style={{ marginTop: 20 }}
               loading={loading}
             >
-              Login
+              Sign Up
             </Button>
-
-            <Button
-              mode="contained"
-              style={{
-                marginTop: 10,
-                backgroundColor: "#efefef",
-                borderColor: "#000",
-                borderStyle: "solid",
-                borderWidth: 1,
-              }}
-              onPress={() => router.navigate("/sign-up")}
-            >
-              <Text style={{ color: "#000" }}>Sign Up</Text>
-            </Button>
-            {signInError && (
-              <Text style={{ color: "red", marginTop: 10 }}>{signInError}</Text>
+            {signUpError && (
+              <Text style={{ color: "red", marginTop: 10 }}>{signUpError}</Text>
             )}
           </View>
         </View>
@@ -116,4 +103,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

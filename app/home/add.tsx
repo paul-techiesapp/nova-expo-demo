@@ -1,40 +1,32 @@
 import { View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Button, Snackbar, Text, TextInput } from "react-native-paper";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { db } from "../firebaseConfig";
-import { ref, get, update } from "firebase/database";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { db } from "../../firebaseConfig";
+import { ref, push } from "firebase/database";
+import { router } from "expo-router";
+import { useState } from "react";
 
 const taskRef = ref(db, "tasks");
 
-const EditScreen = () => {
+// interface Inputs {
+//   task: string;
+// }
+
+const AddScreen = () => {
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<Inputs>();
+  const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const params = useLocalSearchParams();
-
-  const getTaskById = async () => {
-    const taskSnapshot = await get(ref(db, `tasks/${params.id}`));
-    if (taskSnapshot.exists()) {
-      const task = taskSnapshot.val();
-      reset(task);
-    }
-  };
-
-  useEffect(() => {
-    getTaskById();
-  }, []);
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     setLoading(true);
-    update(ref(db, `tasks/${params.id}`), data)
+    push(taskRef, data)
       .then(() => {
+        setVisible(true);
         router.navigate("/");
       })
       .catch((error) => {
@@ -73,8 +65,15 @@ const EditScreen = () => {
       >
         Save
       </Button>
+      <Snackbar
+        visible={visible}
+        duration={4000}
+        onDismiss={() => console.log("nothing")}
+      >
+        Successfully created new task!
+      </Snackbar>
     </View>
   );
 };
 
-export default EditScreen;
+export default AddScreen;
